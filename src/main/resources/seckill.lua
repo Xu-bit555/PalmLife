@@ -12,27 +12,28 @@ local userId = ARGV[2]
 local id = ARGV[3]
 
 --库存key
-local stockKey = 'seckill:stock:' .. voucherId
+local stockKey = 'seckill:stock:' .. voucherId  --当前卷的库存
 --订单key
-local orderKey = 'seckill:order:' .. voucherId
+local orderKey = 'seckill:order:' .. voucherId  --当前卷的订单
 
 --库存是否充足
 --库存不足
-if (tonumber(redis.call('get', stockKey)) <= 0) then
+if (tonumber(redis.call('get', stockKey)) <= 0) then    --redis.call()执行查询库存
     return 1
 end
 
 --判断用户是否下单
 --存在用户 禁止重复下单
-if (tonumber(redis.call('sismember', orderKey, userId)) == 1) then
+if (tonumber(redis.call('sismember', orderKey, userId)) == 1) then  --判断userId是否存在订单中
     return 2
 end
 
 --扣减库存
-redis.call('incrby',stockKey,-1)
+redis.call('incrby',stockKey,-1)    --扣减库存
 --下单（保存用户）
-redis.call('sadd',orderKey,userId)
+redis.call('sadd',orderKey,userId)  --保存用户
 --发送消息
-redis.call('xadd','stream.orders','*','userId',userId,'voucherId',voucherId,'id',id)
+--XADD 支持消息队列，消息将会被发送到stream.orders中，“*”开启自动生成ID功能，userId、voucherId、id为消息内容
+redis.call('xadd','stream.orders','*','userId',userId,'voucherId',voucherId,'id',id)    --发送消息
 return 0
 
