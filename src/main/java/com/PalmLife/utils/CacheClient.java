@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.PalmLife.config.ThreadPoolConfig;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.PalmLife.entity.Shop;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +23,7 @@ import java.util.function.Function;
 import static com.PalmLife.utils.RedisConstants.*;
 
 /**
- * redis工具类
+ * 操作redis缓存工具类
  *
  * @author CHEN
  * @date 2022/10/08
@@ -93,6 +92,36 @@ public class CacheClient {
         if ("".equals(json)) {
             return null;
         }
+
+//        //redis不存在时，获得互斥锁
+//        String lockKey = LOCK_SHOP_KEY + id;
+//        boolean flag = tryLock(lockKey);
+//        //是否获取锁成功
+//        if (flag) {
+//            //成功 异步重建
+//            threadPoolTaskExectour.submit(() -> {
+//                try {
+//                    //查询数据库
+//                    R newR = dbFallback.apply(id);
+//                    //如果数据库为空
+//                    if(newR == null){
+//                        //Redis写入空值
+//                        this.set(key, "", CACHE_NULL_TTL, TimeUnit.SECONDS);
+//                    }
+//                    //如果数据库存在，写入redis
+//                    this.set(key, newR, time, unit);
+//                } catch (Exception e) {
+//                    throw new RuntimeException(e);
+//                } finally {
+//                    //释放锁
+//                    unLock(lockKey);
+//                }
+//            });
+//
+//        }
+//        return dbFallback.apply(id);
+
+
         //不存在 查询数据库
         R r = dbFallback.apply(id);
         if (r == null) {

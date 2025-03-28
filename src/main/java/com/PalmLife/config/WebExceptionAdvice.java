@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.validation.ConstraintViolationException;
+import java.sql.SQLIntegrityConstraintViolationException;
 
 /**
  * 全局异常处理器
@@ -30,7 +31,7 @@ public class WebExceptionAdvice {
     }
 
     //专门处理请求异常
-    @ExceptionHandler(value = {MethodArgumentNotValidException.class, HttpMessageNotReadableException.class, ConstraintViolationException.class})
+    @ExceptionHandler(value = {SQLIntegrityConstraintViolationException.class,MethodArgumentNotValidException.class, HttpMessageNotReadableException.class, ConstraintViolationException.class})
     @ResponseBody
     public Result ArgumentValidExceptionHandler(Exception ignored) {
         return Result.fail("请检查参数是否正确");

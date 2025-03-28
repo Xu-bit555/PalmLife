@@ -15,13 +15,19 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class RedissonConfig {
+    @Value("${spring.redis.host}")
+    private String host;
+    @Value("${spring.redis.port}")
+    private int port;
+    @Value("${spring.redis.password}")
+    private String password;
     @Bean
     public RedissonClient redissonClient(){
         //配置
         Config config=new Config();
         config.useSingleServer()
-                .setAddress("redis://192.168.163.133:6379")
-                .setPassword("123456");
+                .setAddress("redis://" + host+ ":" + port)
+                .setPassword(password);
         //创建对并且返回
         return Redisson.create(config);
     }

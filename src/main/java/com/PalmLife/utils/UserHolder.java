@@ -4,8 +4,8 @@ import com.PalmLife.dto.UserDTO;
 
 /**
  * ThreadLocal操作用户信息
- */
 
+ */
 public class UserHolder {
     //创建UserDTO类型的ThreadLocal对象
     private static final ThreadLocal<UserDTO> tl = new ThreadLocal<>();

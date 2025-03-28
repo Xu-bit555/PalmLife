@@ -1,11 +1,8 @@
 package com.PalmLife.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
+import com.PalmLife.utils.BloomFilterConfig;
+import com.google.common.hash.BloomFilter;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
-import com.PalmLife.utils.RedisData;
-import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.PalmLife.dto.Result;
@@ -25,10 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static com.PalmLife.utils.RedisConstants.*;
@@ -47,8 +41,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private StringRedisTemplate stringRedisTemplate;
     @Resource
     private CacheClient cacheClient;
+    @Resource
+    private BloomFilter bloomFilter;
 
 //    private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
+
 
 
     /**
@@ -67,10 +64,28 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         //逻辑过期解决缓存击穿
 //        Shop shop = queryWithLogicalExpire(id);
         //使用Cache工具类，逻辑过期解决缓存击穿
-        Shop shop = cacheClient.queryWithLogicalExpire(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
+//        Shop shop = cacheClient.queryWithLogicalExpire(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
+//        if (shop == null) {
+//            return Result.fail("店铺不存在");
+//        }
+//
+//        if(!bloomFilter.mightContain(id)){
+//            return Result.fail("店铺不存在");
+//        }
+
+        Shop shop = cacheClient.queryWithPassThrough(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
+
         if (shop == null) {
-            return Result.fail("店铺不存在");
+            // 如果缓存中没有数据，从数据库中查询
+            shop = lambdaQuery().eq(Shop::getId, id).one();
+            if (shop == null) {
+                // 如果数据库中也没有数据，返回错误结果
+                return Result.fail("店铺不存在");
+            }
+            // 如果从数据库中查询到数据，更新缓存
+            cacheClient.set(CACHE_SHOP_KEY + id, shop, CACHE_SHOP_TTL, TimeUnit.MINUTES);
         }
+
         return Result.ok(shop);
     }
 

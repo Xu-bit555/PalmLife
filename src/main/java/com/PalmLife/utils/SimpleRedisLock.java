@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 简单的redis分布式锁
+ * 简单实现的redis分布式锁
  *
  * @author CHEN
  * @date 2022/10/09

@@ -1,5 +1,6 @@
 package com.PalmLife.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.PalmLife.dto.Result;
 import com.PalmLife.entity.SeckillVoucher;
@@ -39,7 +40,14 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void addSeckillVoucher(Voucher voucher) {
+    public Result addSeckillVoucher(Voucher voucher) {
+        //判断新增的优惠卷ID是否重复
+        Boolean flag = seckillVoucherService.equals(
+                new LambdaQueryWrapper<Voucher>()
+                        .eq(Voucher::getId , voucher.getId()));
+        if(flag == true){
+            return Result.fail("优惠卷id重复");
+        }
         // 保存优惠券
         save(voucher);
         // 保存秒杀信息
@@ -51,6 +59,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         seckillVoucherService.save(seckillVoucher);
         //保存秒杀库存的到redis
         stringRedisTemplate.opsForValue().set(SECKILL_STOCK_KEY + voucher.getId() , voucher.getStock().toString());
+        return Result.ok(voucher.getId());
     }
 
     /**

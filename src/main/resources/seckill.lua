@@ -4,36 +4,47 @@
 --- DateTime: 2022/10/12 17:37
 ---
 
----秒杀券id
+
+--秒杀券id
 local voucherId = ARGV[1]
 --用户id
 local userId = ARGV[2]
 --订单id
 local id = ARGV[3]
 
+
 --库存key
-local stockKey = 'seckill:stock:' .. voucherId  --当前卷的库存
+local stockKey = 'seckill:stock:' .. voucherId  --当前卷的库存 seckill:stock:2
 --订单key
-local orderKey = 'seckill:order:' .. voucherId  --当前卷的订单
+local orderKey = 'seckill:order:' .. voucherId  --当前卷的订单 seckill:order:
 
 --库存是否充足
---库存不足
+--库存不足（由于存储在redis中的库存值是字符串类型的，所以不能使用int进行比较）
 if (tonumber(redis.call('get', stockKey)) <= 0) then    --redis.call()执行查询库存
-    return 1
+    return {1, voucherId , userId , id}
 end
 
---判断用户是否下单
+--local stock = redis.call('get', stockKey)
+----查询一个不存在的键时返回false，查询成功库存为零返回nil
+--if stock == false or stock == nil or stock < 1 then
+--    return {1, userId, voucherId, id}
+--end
+
+
+--判断用户是否已经下单
 --存在用户 禁止重复下单
 if (tonumber(redis.call('sismember', orderKey, userId)) == 1) then  --判断userId是否存在订单中
-    return 2
+    return {2, voucherId , userId , id}
 end
 
 --扣减库存
 redis.call('incrby',stockKey,-1)    --扣减库存
 --下单（保存用户）
 redis.call('sadd',orderKey,userId)  --保存用户
---发送消息
---XADD 支持消息队列，消息将会被发送到stream.orders中，“*”开启自动生成ID功能，userId、voucherId、id为消息内容
-redis.call('xadd','stream.orders','*','userId',userId,'voucherId',voucherId,'id',id)    --发送消息
-return 0
+----发送消息
+----XADD 支持消息队列，消息将会被发送到stream.orders中，“*”开启自动生成ID功能，userId、voucherId、id为消息内容
+--redis.call('xadd','stream.orders','*','userId',userId,'voucherId',voucherId,'id',id)    --发送消息
+--return 0
+--使用rabbitmq将lua脚本的结果返回
+return {0, voucherId , userId , id}
 

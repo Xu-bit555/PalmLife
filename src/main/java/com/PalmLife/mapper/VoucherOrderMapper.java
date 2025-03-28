@@ -12,5 +12,5 @@ import com.PalmLife.entity.VoucherOrder;
  * @since 2021-12-22
  */
 public interface VoucherOrderMapper extends BaseMapper<VoucherOrder> {
-
+        int save(VoucherOrder voucherOrder);
 }

@@ -4,9 +4,9 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
+import com.PalmLife.dto.LoginFormDTO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.PalmLife.dto.LoginFormDTO;
 import com.PalmLife.dto.Result;
 import com.PalmLife.dto.UserDTO;
 import com.PalmLife.entity.User;
@@ -92,7 +92,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //Token保存在Redis中，存储用户信息
         stringRedisTemplate.opsForHash().putAll(LOGIN_USER_KEY + token, map);
         //设置过期时间
-        stringRedisTemplate.expire(LOGIN_USER_KEY + token, LOGIN_USER_TTL, TimeUnit.MINUTES);
+        stringRedisTemplate.expire(LOGIN_USER_KEY + token, LOGIN_USER_TTL, TimeUnit.DAYS);
         return Result.ok(token);
     }
 

@@ -3,23 +3,47 @@ server:
 spring:
   application:
     name: PalmLife
+#  MySQL
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.163.134:3306/hmdp?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://192.168.163.136:3306/hmdp?useSSL=false&serverTimezone=UTC
     username: root
     password: 123456
+#  Redis
   redis:
-    host: 192.168.163.134
+    host: 192.168.163.136
     port: 6379
     password: 123456
 
     lettuce:
       pool:
-        max-active: 50
+        max-active: 500
         max-idle: 20
         min-idle: 5
+
+  # Spring AMQP 配置
+  amqp:
+    enabled: true
+  # RabbitMQ 配置
+  rabbitmq:
+    host: 192.168.163.136
+    port: 5672
+    username: life
+    password: 123456
+    virtual-host: "life"
+    template:
+      retry:
+        # 开启重试
+        enabled: true
+        # 最大重试次数
+        max-attempts: 3
+        # 第一次和第二次重试之间的持续时间
+        initial-interval: "3s"
+
+
   jackson:
     default-property-inclusion: non_null # JSON处理时忽略非空字段
+    #Mybatis-Plus
 mybatis-plus:
   type-aliases-package: com.PalmLife.entity # 别名扫描包
 logging:

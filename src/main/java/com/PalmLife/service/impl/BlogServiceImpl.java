@@ -17,6 +17,7 @@ import com.PalmLife.service.IUserService;
 import com.PalmLife.utils.RedisConstants;
 import com.PalmLife.utils.SystemConstants;
 import com.PalmLife.utils.UserHolder;
+import com.google.common.util.concurrent.RateLimiter;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
@@ -42,6 +43,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     private IFollowService followService;
     @Resource
     private RedisTemplate redisTemplate;
+
+    //引入令牌桶算法，每秒最多处理 5 次请求
+    private static final RateLimiter rateLimiter = RateLimiter.create(5);
+
 
     /**
      * 保存博客
@@ -118,6 +123,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public Result queryHotBlog(Integer current) {
+        // 使用 RateLimiter 进行限流
+        if (!rateLimiter.tryAcquire()) {
+            // 如果没有获取到令牌，返回限流提示
+            return Result.fail("请求过于频繁，请稍后再试");
+        }
+
         // 根据点赞量进行排序，根据页码进行数据查询
         Page<Blog> page = query()
                 .orderByDesc("liked")

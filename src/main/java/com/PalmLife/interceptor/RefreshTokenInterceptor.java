@@ -7,6 +7,8 @@ import com.PalmLife.utils.RedisConstants;
 import com.PalmLife.utils.UserHolder;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.annotation.Resource;
@@ -21,15 +23,19 @@ import java.util.concurrent.TimeUnit;
  * @author CHEN
  * @date 2022/10/07
  */
+@Component
 public class RefreshTokenInterceptor implements HandlerInterceptor {
-    @Resource
-    private RedisTemplate redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
+
+    public RefreshTokenInterceptor(StringRedisTemplate stringRedisTemplate) {
+        this.stringRedisTemplate = stringRedisTemplate;
+    }
 
     /**
      * 进入servelt之前执行刷新令牌
      */
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler){
         //从请求头中获取token
         String token = request.getHeader("authorization");
         if (StringUtils.isEmpty(token)) {
@@ -37,8 +43,7 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
             return true;
         }
         //从redis中获取用户
-        Map<Object, Object> userMap = redisTemplate.opsForHash()
-                        .entries(RedisConstants.LOGIN_USER_KEY + token);
+        Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(RedisConstants.LOGIN_USER_KEY + token);
         //用户不存在
         if (userMap.isEmpty()) {
             return true;
@@ -46,7 +51,7 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
         //将redis提取出的userMap转换为UserDTO存入ThreadLocal
         UserHolder.saveUser(BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false));   //false作用忽略大小写
         //token续命
-        redisTemplate.expire(RedisConstants.LOGIN_USER_KEY + token, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
+        stringRedisTemplate.expire(RedisConstants.LOGIN_USER_KEY + token, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
         return true;
     }
 

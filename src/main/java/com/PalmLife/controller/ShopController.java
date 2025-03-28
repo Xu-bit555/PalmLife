@@ -2,11 +2,13 @@ package com.PalmLife.controller;
 
 
 import cn.hutool.core.util.StrUtil;
+import com.PalmLife.utils.BloomFilterConfig;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.PalmLife.dto.Result;
 import com.PalmLife.entity.Shop;
 import com.PalmLife.service.IShopService;
 import com.PalmLife.utils.SystemConstants;
+import com.google.common.hash.BloomFilter;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -23,6 +25,11 @@ public class ShopController {
 
     @Resource
     public IShopService shopService;
+
+    @Resource
+    public BloomFilter bloomFilter;
+
+
 
     /**
      * 根据id查询商铺信息
@@ -43,6 +50,7 @@ public class ShopController {
     public Result saveShop(@RequestBody Shop shop) {
         // 写入数据库
         shopService.save(shop);
+        bloomFilter.put(shop.getId());
         return Result.ok();
     }
 

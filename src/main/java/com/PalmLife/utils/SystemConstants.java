@@ -1,5 +1,10 @@
 package com.PalmLife.utils;
 
+
+/**
+ * 环境变量
+ */
+
 public class SystemConstants {
     public static final String IMAGE_UPLOAD_DIR = "D:\\Java\\javacode\\PalmLife\\imags";
     public static final String USER_NICK_NAME_PREFIX = "user_";

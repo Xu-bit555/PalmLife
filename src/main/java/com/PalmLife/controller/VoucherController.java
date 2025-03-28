@@ -4,6 +4,7 @@ package com.PalmLife.controller;
 import com.PalmLife.dto.Result;
 import com.PalmLife.entity.Voucher;
 import com.PalmLife.service.IVoucherService;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -54,8 +55,8 @@ public class VoucherController {
      */
     @PostMapping("seckill")
     public Result addSeckillVoucher(@RequestBody Voucher voucher) {
-        voucherService.addSeckillVoucher(voucher);
-        return Result.ok(voucher.getId());
+//        return Result.ok(voucher.getId());
+        return voucherService.addSeckillVoucher(voucher);
     }
 
 

@@ -1,6 +1,6 @@
 package com.PalmLife.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
+import com.PalmLife.utils.SnowflakeIdWorker;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.PalmLife.dto.Result;
@@ -13,25 +13,21 @@ import com.PalmLife.service.IVoucherOrderService;
 import com.PalmLife.utils.RedisIdWorker;
 import com.PalmLife.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.*;
+
 
 /**
  * <p>
@@ -46,12 +42,32 @@ import java.util.concurrent.*;
 public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, VoucherOrder> implements IVoucherOrderService {
     @Resource
     private ISeckillVoucherService seckillVoucherService;
+    /**
+     * 生成分布式ID
+     */
     @Resource
     private RedisIdWorker redisIdWorker;
+
+    /**
+     * 实现分布式锁
+     */
     @Resource
     private RedissonClient redissonClient;
+
+    /**
+     * Redis的模版类
+     */
     @Resource
     private RedisTemplate redisTemplate;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
+    /**
+     *RabbitMQ的模版类
+     */
+    @Resource
+    private RabbitTemplate rabbitTemplate;
+
     /**
      * 自己注入自己为了获取代理对象 @Lazy 延迟注入 避免形成循环依赖
      */
@@ -59,21 +75,71 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Lazy
     private IVoucherOrderService voucherOrderService;
 
-    private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
-    //    private static final BlockingQueue<VoucherOrder> orderTasks=new ArrayBlockingQueue<>(1024*1024);
-    private static final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
-
-    //初始化lua脚本
+    /**
+     * 初始化lua脚本
+     */
+    private static final DefaultRedisScript<List> SECKILL_SCRIPT;
     static {
         SECKILL_SCRIPT = new DefaultRedisScript<>();    //初始化脚本
         SECKILL_SCRIPT.setLocation(new ClassPathResource("seckill.lua"));   //脚本位置
-        SECKILL_SCRIPT.setResultType(Long.class);   //指定脚本返回类型
+        SECKILL_SCRIPT.setResultType(List.class);   //指定脚本返回类型
     }
 
     /**
-     * 初始化
+     * 秒杀优惠券(执行lua脚本，将消息放入rabbitmq的消息队列)
+     *
+     * @param voucherId 券id
+     * @return {@link Result}
      */
-    @PostConstruct
+    @Override
+    public Result seckillVoucher(Long voucherId) {
+
+        //获取用户
+        UserDTO user = UserHolder.getUser();
+        //获取订单id
+            //使用雪花算法
+        Long orderId = SnowflakeIdWorker.nextId();
+            //使用redis+时间戳
+//        Long orderId = redisIdWorker.nextId("order");
+        //执行lua脚本
+        List<Object> res =stringRedisTemplate.execute(
+                SECKILL_SCRIPT  //执行脚本
+                , Collections.emptyList()
+                , voucherId.toString()  //参数一：优惠卷ID
+                , user.getId().toString()  //参数二：用户ID
+                , orderId.toString()//参数三：订单ID
+        );
+
+        Long flag = (Long)res.get(0);
+        VoucherOrder voucherOrder = new VoucherOrder();
+        voucherOrder.setVoucherId( Long.valueOf((String) res.get(1)) );
+        voucherOrder.setUserId( Long.valueOf((String)res.get(2))  );
+        voucherOrder.setId( orderId );
+
+        if (flag != 0) {
+            //不为0 没有购买资格
+            return Result.fail(flag == 1 ? "库存不足" : "禁止重复下单");
+        }
+        rabbitTemplate.convertAndSend("life", "order1", voucherOrder);
+
+
+        return Result.ok(voucherOrder.getId());
+    }
+
+
+
+
+/**
+ * 处理Redis消息队列
+ */
+    /**
+     * 初始化线程池，完成ridis消息队列操作
+     */
+    //private static final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
+    /**
+     * 处理消息队列中的消息
+     */
+   /*@PostConstruct
     private void init() {
         SECKILL_ORDER_EXECUTOR.submit(() -> {
             String queueName="stream.orders";
@@ -106,8 +172,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             }
         });
     }
-
-    private void handlePendingList() {
+ */
+    /**
+     * 处理消息队列中的消息：重复方法
+     */
+   /*  private void handlePendingList() {
         String queueName="stream.orders";
         while (true){
             try {
@@ -140,12 +209,12 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             }
         }
     }
-
+   */
     /**
-     * 执行创建订单操作
+     * 处理消息队列中消息辅助方法：执行创建订单操作
      * @param voucherOrder
      */
-    private void handleVoucherOrder(VoucherOrder voucherOrder) {
+   /* private void handleVoucherOrder(VoucherOrder voucherOrder) {
         Long userId = voucherOrder.getUserId();
         //创建锁对象（兜底）
         RLock lock = redissonClient.getLock("lock:order:" + userId);
@@ -162,19 +231,40 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             //释放锁
             lock.unlock();
         }
-
     }
-
-
-
+   */
     /**
-     * 秒杀优惠券(执行lua脚本，将消息放入队列)
+     * 执行创建订单操作辅助方法：创建优惠卷订单
+     * @param voucherOrder 券订单
+     */
+   /* @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void createVoucherOrder(VoucherOrder voucherOrder) {
+        //扣减库存
+        boolean isSuccess = seckillVoucherService.update(
+                new LambdaUpdateWrapper<SeckillVoucher>()
+                        .eq(SeckillVoucher::getVoucherId, voucherOrder.getVoucherId())
+                        .gt(SeckillVoucher::getStock, 0)
+                        .setSql("stock=stock-1"));
+        //创建订单
+        this.save(voucherOrder);
+    }
+   */
+
+
+/**
+ * 存放Reids消息队列
+  */
+    /**
+     * 秒杀优惠券(执行lua脚本，将消息放入redis的消息队列)
      *
      * @param voucherId 券id
      * @return {@link Result}
      */
+    /**
     @Override
     public Result seckillVoucher(Long voucherId) {
+
         //获取用户
         UserDTO user = UserHolder.getUser();
         //获取订单id
@@ -192,9 +282,18 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             //不为0 没有购买资格
             return Result.fail(r == 1 ? "库存不足" : "禁止重复下单");
         }
-        return Result.ok(orderId);
-    }
 
+        return Result.ok(orderId);
+    }*/
+
+
+/**
+ * 使用阻塞队列处理秒杀优惠卷
+  */
+    /**
+     * 初始化阻塞队列
+     */
+    //private static final BlockingQueue<VoucherOrder> orderTasks=new ArrayBlockingQueue<>(1024*1024);
     /**
      * 秒杀优惠券(异步)
      *
@@ -230,6 +329,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         return Result.ok(orderId);
     }*/
 
+
+/**
+ * 单体项目使用互斥锁秒杀优惠卷
+  */
     /**
      * 秒杀优惠券
      *
@@ -288,7 +391,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @return {@link Result}
      */
     @Override
-    @NotNull
+//    @NotNull
     @Transactional(rollbackFor = Exception.class)
     public Result getResult(Long voucherId) {
         //是否下单
@@ -323,20 +426,5 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     }
 
 
-    /**
-     * 创建优惠卷订单
-     * @param voucherOrder 券订单
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void createVoucherOrder(VoucherOrder voucherOrder) {
-        //扣减库存
-        boolean isSuccess = seckillVoucherService.update(
-                new LambdaUpdateWrapper<SeckillVoucher>()
-                        .eq(SeckillVoucher::getVoucherId, voucherOrder.getVoucherId())
-                        .gt(SeckillVoucher::getStock, 0)
-                        .setSql("stock=stock-1"));
-        //创建订单
-        this.save(voucherOrder);
-    }
+
 }

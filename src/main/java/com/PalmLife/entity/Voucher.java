@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -81,12 +83,14 @@ public class Voucher implements Serializable {
     /**
      * 生效时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField(exist = false)
     private LocalDateTime beginTime;
 
     /**
      * 失效时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField(exist = false)
     private LocalDateTime endTime;
 

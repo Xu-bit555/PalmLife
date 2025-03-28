@@ -3,9 +3,6 @@ package com.PalmLife.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.PalmLife.dto.Result;
 import com.PalmLife.entity.VoucherOrder;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.transaction.annotation.Transactional;
-
 /**
  * ivoucher订单服务
  * <p>
@@ -39,7 +36,7 @@ public interface IVoucherOrderService extends IService<VoucherOrder> {
      *
      * @param voucherOrder 券订单
      */
-    @NotNull
-    @Transactional(rollbackFor = Exception.class)
-    void createVoucherOrder(VoucherOrder voucherOrder);
+//    @NotNull
+//    @Transactional(rollbackFor = Exception.class)
+//    void createVoucherOrder(VoucherOrder voucherOrder);
 }
