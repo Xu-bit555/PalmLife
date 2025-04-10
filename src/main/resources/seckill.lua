@@ -21,6 +21,7 @@ local orderKey = 'seckill:order:' .. voucherId  --当前卷的订单 seckill:ord
 --库存是否充足
 --库存不足（由于存储在redis中的库存值是字符串类型的，所以不能使用int进行比较）
 if (tonumber(redis.call('get', stockKey)) <= 0) then    --redis.call()执行查询库存
+    redis.call('del', stockKey)    -- 库存不足，删除对应的 Redis 键
     return {1, voucherId , userId , id}
 end
 

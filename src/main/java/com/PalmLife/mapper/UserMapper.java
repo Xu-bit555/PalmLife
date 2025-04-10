@@ -2,7 +2,6 @@ package com.PalmLife.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.PalmLife.entity.User;
-import org.apache.ibatis.annotations.Mapper;
 
 
 /**
@@ -13,7 +12,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @author 虎哥
  * @since 2021-12-22
  */
-@Mapper
 public interface UserMapper extends BaseMapper<User> {
 
 }

@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @MapperScan("com.PalmLife.mapper")
 @SpringBootApplication
+//@EnableLeafServer   //启动Leaf服务
 public class PalmLifeApplication {
 
     public static void main(String[] args) {

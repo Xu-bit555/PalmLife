@@ -28,7 +28,7 @@ public class UserHolder {
     }
 
     /**
-     * 删除当前用户
+     * 删除当前用户，防止内存泄露
      */
     public static void removeUser(){
         tl.remove();

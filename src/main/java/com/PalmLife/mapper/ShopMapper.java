@@ -1,7 +1,7 @@
 package com.PalmLife.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.PalmLife.entity.Shop;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
  * <p>
@@ -11,6 +11,7 @@ import com.PalmLife.entity.Shop;
  * @author 虎哥
  * @since 2021-12-22
  */
+
 public interface ShopMapper extends BaseMapper<Shop> {
 
 }

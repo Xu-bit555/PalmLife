@@ -2,8 +2,6 @@ package com.PalmLife.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.PalmLife.dto.Result;
 import com.PalmLife.dto.ScrollResult;
 import com.PalmLife.dto.UserDTO;
@@ -17,14 +15,18 @@ import com.PalmLife.service.IUserService;
 import com.PalmLife.utils.RedisConstants;
 import com.PalmLife.utils.SystemConstants;
 import com.PalmLife.utils.UserHolder;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.util.concurrent.RateLimiter;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -173,6 +175,8 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
      */
     @Override
     public Result queryBlogLikesById(Long id) {
+
+
         String key = RedisConstants.BLOG_LIKED_KEY + id;
         //查询top5的点赞用户
         Set<String> top5 = redisTemplate.opsForZSet().range(key, 0, 6);

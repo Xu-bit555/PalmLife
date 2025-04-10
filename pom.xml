@@ -74,22 +74,14 @@
             <version>6.1.6.RELEASE</version>
         </dependency>
 
-
-        <dependency>
-            <groupId>org.mybatis.spring.boot</groupId>
-            <artifactId>mybatis-spring-boot-starter</artifactId>
-            <version>2.1.4</version>
-        </dependency>
-
+        <!--MyBatis-Plus-->
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus</artifactId>
-            <version>3.4.3.4</version>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>3.5.3.1</version>
         </dependency>
 
-
-
-
+        <!--poi工具类-->
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
@@ -126,6 +118,7 @@
             <artifactId>redisson</artifactId>
             <version>3.17.7</version>
         </dependency>
+
         <!--rabbitMq-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -148,14 +141,10 @@
 
         <!--Leaf-->
         <dependency>
-            <groupId>com.tencent.devops.leaf</groupId>
+            <groupId>com.sankuai.inf.leaf</groupId>
             <artifactId>leaf-boot-starter</artifactId>
             <version>1.0.1-RELEASE</version>
             <exclusions>
-                <exclusion>
-                    <groupId>org.mybatis</groupId>
-                    <artifactId>mybatis</artifactId>
-                </exclusion>
                 <exclusion>
                     <groupId>commons-io</groupId>
                     <artifactId>commons-io</artifactId>
@@ -164,8 +153,14 @@
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.mybatis</groupId>
+                    <artifactId>mybatis</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
+
+
 
 
     </dependencies>
@@ -185,6 +180,12 @@
                 </configuration>
             </plugin>
         </plugins>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
     </build>
 
 </project>

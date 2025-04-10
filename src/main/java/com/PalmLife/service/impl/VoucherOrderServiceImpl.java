@@ -1,8 +1,5 @@
 package com.PalmLife.service.impl;
 
-import com.PalmLife.utils.SnowflakeIdWorker;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.PalmLife.dto.Result;
 import com.PalmLife.dto.UserDTO;
 import com.PalmLife.entity.SeckillVoucher;
@@ -11,7 +8,10 @@ import com.PalmLife.mapper.VoucherOrderMapper;
 import com.PalmLife.service.ISeckillVoucherService;
 import com.PalmLife.service.IVoucherOrderService;
 import com.PalmLife.utils.RedisIdWorker;
+import com.PalmLife.utils.SnowflakeIdWorker;
 import com.PalmLife.utils.UserHolder;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.*;
 
 
 /**
@@ -68,6 +67,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Resource
     private RabbitTemplate rabbitTemplate;
 
+
     /**
      * 自己注入自己为了获取代理对象 @Lazy 延迟注入 避免形成循环依赖
      */
@@ -93,6 +93,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      */
     @Override
     public Result seckillVoucher(Long voucherId) {
+        //判断秒杀卷是否过期
+//        SeckillVoucher seckillVoucher = new SeckillVoucher();
+
 
         //获取用户
         UserDTO user = UserHolder.getUser();

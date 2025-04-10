@@ -6,19 +6,15 @@ import com.PalmLife.entity.VoucherOrder;
 import com.PalmLife.mapper.VoucherOrderMapper;
 import com.PalmLife.service.ISeckillVoucherService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.impl.AMQImpl;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import javax.annotation.Resource;
 import java.io.IOException;
@@ -45,11 +41,11 @@ public class RabbitMqConsumer {
     public void consumer(VoucherOrder voucherOrder, Channel channel, Message message) throws IOException {
         try {
 
-
             //判断是否已经有订单
             VoucherOrder voucherOrder1 = voucherOrderMapper.selectById(voucherOrder.getId());
             if(voucherOrder1 == null){
                 System.out.println("禁止重复下单");
+                return;
             }
             //下单
             Long userId = voucherOrder.getUserId();
@@ -82,7 +78,7 @@ public class RabbitMqConsumer {
         }
     }
 
-    /**
+    /**\
      * 执行创建订单存入数据库中
      * @param voucherOrder
      */

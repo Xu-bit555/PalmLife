@@ -70,12 +70,11 @@ public class SnowflakeIdWorker {
     }
 
     private SnowflakeIdWorker() {
-
         //获取机器编码
         this.workerId=this.getMachineNum();
         //获取进程编码
         RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
-        this.processId=Long.valueOf(runtimeMXBean.getName().split("@")[0]).longValue();
+        this.processId = Long.valueOf(runtimeMXBean.getName().split("@")[0]).longValue();
 
         //避免编码超出最大值
         this.workerId=workerId & workerMask;

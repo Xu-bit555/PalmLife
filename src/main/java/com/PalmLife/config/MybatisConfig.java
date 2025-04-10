@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * MybatisPlus配置类
  */
+//@MapperScan(basePackages = "com.PalmLife.mapper")
 @Configuration
 public class MybatisConfig {
     @Bean

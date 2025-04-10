@@ -6,12 +6,12 @@ spring:
 #  MySQL
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.163.136:3306/hmdp?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://192.168.163.141:3306/hmdp?useSSL=false&serverTimezone=UTC
     username: root
     password: 123456
 #  Redis
   redis:
-    host: 192.168.163.136
+    host: 192.168.163.141
     port: 6379
     password: 123456
 
@@ -26,7 +26,7 @@ spring:
     enabled: true
   # RabbitMQ 配置
   rabbitmq:
-    host: 192.168.163.136
+    host: 192.168.163.141
     port: 5672
     username: life
     password: 123456
@@ -40,12 +40,23 @@ spring:
         # 第一次和第二次重试之间的持续时间
         initial-interval: "3s"
 
+  #Leaf
+#leaf:
+#  name: com.PalmLife.leaf
+#  segment:
+#    enable: true
+#  jdbc:
+#    url: jdbc:mysql://localhost:3306/leaf?useSSL=false&serverTimezone=UTC
+#    username: root
+#    password: your_password
 
   jackson:
     default-property-inclusion: non_null # JSON处理时忽略非空字段
+
     #Mybatis-Plus
 mybatis-plus:
   type-aliases-package: com.PalmLife.entity # 别名扫描包
+#  mapper-locations: classpath:mapper/*.xml
 logging:
   level:
     com.PalmLife: debug

@@ -1,10 +1,10 @@
 package com.PalmLife.config;
 
-import com.rabbitmq.client.ConnectionFactory;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -55,6 +55,17 @@ public class RabbitMQConfig {
 
         return cachingConnectionFactory ;
     }
+
+    @Bean
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(CachingConnectionFactory cachingConnectionFactory) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        factory.setConnectionFactory(cachingConnectionFactory);
+        factory.setConcurrentConsumers(5); // 设置同时启动的消费者数量
+        factory.setMaxConcurrentConsumers(10); // 设置最大消费者数量
+        factory.setMessageConverter(jsonMessageConverter());
+        return factory;
+    }
+
 
     //实现JSON序列化
     @Bean
